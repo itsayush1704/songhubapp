@@ -1,0 +1,7 @@
+Flask
+ytmusicapi
+python-dotenv
+yt-dlp
+requests
+numpy
+scikit-learn
