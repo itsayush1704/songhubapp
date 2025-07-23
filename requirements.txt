@@ -1,9 +1,7 @@
-Flask==3.0.0
-ytmusicapi==1.7.0
-python-dotenv==1.0.0
-yt-dlp==2024.1.7
-requests==2.31.0
-numpy==1.26.0
-scikit-learn==1.4.0
-gunicorn==21.2.0
-flask-cors==4.0.0
+Flask
+ytmusicapi
+python-dotenv
+yt-dlp
+requests
+numpy
+scikit-learn

@@ -129,6 +129,40 @@
         .bg-spotify-black {
             background-color: var(--spotify-black);
         }
+        
+        /* Desktop Notice Overlay Styles */
+        .text-spotify-light-gray {
+            color: var(--spotify-light-gray);
+        }
+        
+        #desktopNotice {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        #desktopNotice .bg-spotify-dark {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Hide top banner and bottom navigation on desktop */
+        @media (min-width: 1024px) {
+            header {
+                display: none !important;
+            }
+            
+            .fixed.bottom-0 {
+                display: none !important;
+            }
+            
+            #bottomNav {
+                display: none !important;
+            }
+            
+            .mini-player {
+                display: none !important;
+            }
+        }
         .mini-player {
             transition: all 0.3s ease;
             border-radius: 12px;
@@ -1763,6 +1797,24 @@
     </style>
 </head>
 <body class="font-sans">
+    <!-- Desktop Notice Overlay -->
+    <div id="desktopNotice" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center hidden lg:flex">
+        <div class="bg-spotify-dark p-8 rounded-lg max-w-md mx-4 text-center">
+            <i class="fas fa-mobile-alt text-6xl text-spotify-green mb-4"></i>
+            <h2 class="text-2xl font-bold mb-4">Mobile Only Experience</h2>
+            <p class="text-spotify-light-gray mb-6">SongHub is designed exclusively for mobile devices. Please access this app from your smartphone or tablet for the best experience.</p>
+            <div class="flex flex-col space-y-3">
+                <p class="text-sm text-spotify-light-gray">Scan this QR code with your phone:</p>
+                <div class="bg-white p-4 rounded-lg mx-auto">
+                    <div class="w-32 h-32 bg-gray-200 rounded flex items-center justify-center">
+                        <i class="fas fa-qrcode text-4xl text-gray-600"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-spotify-light-gray">Or visit this URL on your mobile device</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Pre-screen Loader -->
     <div id="preLoader">
         <div class="loader-logo">
@@ -1980,10 +2032,19 @@
                 <!-- Search Loading Spinner -->
                 <div id="searchLoadingSpinner" class="hidden flex flex-col items-center justify-center py-16">
                     <div class="relative">
-                        <div class="w-12 h-12 border-4 border-spotify-green border-t-transparent rounded-full animate-spin"></div>
-                        <div class="absolute inset-0 w-12 h-12 border-4 border-transparent border-b-spotify-green rounded-full animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+                        <!-- Modern pulsing dots spinner -->
+                        <div class="flex space-x-2">
+                            <div class="w-3 h-3 bg-spotify-green rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+                            <div class="w-3 h-3 bg-spotify-green rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+                            <div class="w-3 h-3 bg-spotify-green rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+                        </div>
+                        <!-- Outer ring animation -->
+                        <div class="absolute -inset-4 border-2 border-spotify-green border-opacity-20 rounded-full animate-ping"></div>
                     </div>
-                    <p class="text-spotify-light-gray text-sm mt-4 animate-pulse">Searching for music...</p>
+                    <div class="mt-6 text-center">
+                        <p class="text-white text-base font-medium mb-1 animate-pulse">Searching</p>
+                        <p class="text-spotify-light-gray text-sm animate-pulse">Finding the perfect tracks for you...</p>
+                    </div>
                 </div>
                 
                 <!-- Search Results -->
@@ -2886,8 +2947,24 @@
                 }
                 
                 // Get stream URL from backend
-                const response = await fetch(`/get_stream_url/${videoId}?audio_only=true`);
-                const streamData = await response.json();
+                let response, streamData;
+                try {
+                    response = await fetch(`/get_stream_url/${videoId}?audio_only=true`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    streamData = await response.json();
+                } catch (fetchError) {
+                    console.error('Fetch error details:', fetchError);
+                    // Fallback to YouTube if fetch fails
+                    isBuffering = false;
+                    isPlaying = false;
+                    updatePlayPauseButton();
+                    showNotification('Network error. Opening in YouTube...', 'info');
+                    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                    window.open(youtubeUrl, '_blank');
+                    return;
+                }
                 
                 if (streamData.status === 'success') {
                     // Create new audio element
@@ -3092,33 +3169,25 @@
 
         async function handlePlaylistClick(browseId, playlistTitle) {
             try {
+                // Close search overlay if it's open
+                const searchOverlay = document.getElementById('searchOverlay');
+                if (!searchOverlay.classList.contains('hidden')) {
+                    closeSearchOverlay();
+                }
+                
                 showNotification(`Loading playlist: ${playlistTitle}`, 'info');
                 
-                const response = await fetch(`/playlist/${browseId}`);
+                const response = await fetch(`/playlist/${browseId}/songs`);
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    const playlist = data.playlist;
-                    const songs = playlist.tracks.filter(song => song.videoId);
+                    const playlistInfo = data.playlist;
+                    const songs = data.songs.filter(song => song.videoId);
                     
                     if (songs.length > 0) {
-                        // Set up playlist and start playing
-                        currentPlaylist = songs.map(song => ({ ...song, from: 'playlist' }));
-                        currentIndex = 0;
-                        
-                        // Play the first song
-                        const firstSong = songs[0];
-                        playSong(
-                            firstSong.videoId, 
-                            firstSong.title, 
-                            firstSong.artists[0].name, 
-                            getBestThumbnailUrl(firstSong.thumbnails, firstSong.videoId)
-                        );
-                        
-                        // Hide search and show player
-                        hideSearchAndShowPlayer();
-                        
-                        showNotification(`Playing playlist: ${playlistTitle} (${songs.length} songs)`, 'success');
+                        // Show playlist in album/playlist view
+                        showAlbumPlaylistView(playlistInfo, songs, 'playlist');
+                        showNotification(`Loaded playlist: ${playlistTitle} (${songs.length} songs)`, 'success');
                     } else {
                         showNotification('This playlist has no playable songs', 'error');
                     }
@@ -4413,7 +4482,7 @@
                 hidePreLoader(); // Hide loader even if there's an error
             }
             
-            loadPlaylists();
+            // loadPlaylists(); // Removed - playlists section deleted
         });
 
         function displayRecommendations(recommendations, personalizationLevel, breakdown) {
@@ -4587,6 +4656,12 @@
 
         function displayPlaylists(playlists) {
             const container = document.getElementById('playlists');
+            
+            // Check if container exists
+            if (!container) {
+                console.error('Playlists container not found');
+                return;
+            }
             
             // Check if we have playlists to display
             if (!playlists || Object.keys(playlists).length === 0) {
@@ -4887,7 +4962,7 @@
                 const data = await response.json();
                 if (data.status === 'success') {
                     loadPlaylistSongs(playlistId);
-                    loadPlaylists();
+                    // loadPlaylists(); // Removed - playlists section deleted
                 }
             } catch (error) {
                 console.error('Failed to remove song from playlist:', error);
