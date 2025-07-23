@@ -4735,9 +4735,17 @@
                 song.playCount = (song.playCount || 0) + 1;
                 localStorage.setItem('library', JSON.stringify(libraryData));
                 
-                // Set current playlist to library
-                currentPlaylist = libraryData;
-                currentIndex = libraryData.findIndex(s => s.videoId === videoId);
+                // Sort by most recently added (same as display order)
+                const sortedData = [...libraryData].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+                
+                // Convert sorted library data to playlist format with proper structure
+                currentPlaylist = sortedData.map(libSong => ({
+                    videoId: libSong.videoId,
+                    title: libSong.title,
+                    artists: [{ name: libSong.artist }], // Convert to expected format
+                    thumbnails: [{ url: libSong.thumbnail }]
+                }));
+                currentIndex = sortedData.findIndex(s => s.videoId === videoId);
                 
                 playSong(song.videoId, song.title, song.artist, song.thumbnail);
                 updateLibraryDisplay();
@@ -4763,17 +4771,55 @@
 
         function playAllLibrary() {
             if (libraryData.length === 0) return;
-            currentPlaylist = [...libraryData];
+            
+            // Sort by most recently added (same as display order)
+            const sortedData = [...libraryData].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+            
+            // Convert sorted library data to playlist format with proper structure
+            currentPlaylist = sortedData.map(libSong => ({
+                videoId: libSong.videoId,
+                title: libSong.title,
+                artists: [{ name: libSong.artist }], // Convert to expected format
+                thumbnails: [{ url: libSong.thumbnail }]
+            }));
             currentIndex = 0;
-            playLibrarySong(libraryData[0].videoId);
+            
+            // Start with the first song in sorted order (most recently added)
+            const firstSong = sortedData[0];
+            // Find and increment play count in original libraryData
+            const originalSong = libraryData.find(s => s.videoId === firstSong.videoId);
+            if (originalSong) {
+                originalSong.playCount = (originalSong.playCount || 0) + 1;
+                localStorage.setItem('library', JSON.stringify(libraryData));
+            }
+            
+            playSong(firstSong.videoId, firstSong.title, firstSong.artist, firstSong.thumbnail);
+            updateLibraryDisplay();
         }
 
         function shuffleLibrary() {
             if (libraryData.length === 0) return;
             const shuffled = [...libraryData].sort(() => Math.random() - 0.5);
-            currentPlaylist = shuffled;
+            
+            // Convert shuffled library data to playlist format with proper structure
+            currentPlaylist = shuffled.map(libSong => ({
+                videoId: libSong.videoId,
+                title: libSong.title,
+                artists: [{ name: libSong.artist }], // Convert to expected format
+                thumbnails: [{ url: libSong.thumbnail }]
+            }));
             currentIndex = 0;
-            playLibrarySong(shuffled[0].videoId);
+            
+            const firstSong = shuffled[0];
+            // Increment play count for the original song in libraryData
+            const originalSong = libraryData.find(s => s.videoId === firstSong.videoId);
+            if (originalSong) {
+                originalSong.playCount = (originalSong.playCount || 0) + 1;
+                localStorage.setItem('library', JSON.stringify(libraryData));
+            }
+            
+            playSong(firstSong.videoId, firstSong.title, firstSong.artist, firstSong.thumbnail);
+            updateLibraryDisplay();
         }
 
         // Initialize library functionality
