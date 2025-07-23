@@ -2,19 +2,11 @@ from flask import Flask, render_template, request, jsonify, session, send_file
 from flask_cors import CORS
 from ytmusicapi import YTMusic
 import os
-from dotenv import load_dotenv
-import yt_dlp
 import json
 from datetime import datetime
-import pickle
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from collections import defaultdict, Counter
 import hashlib
 import time
-
-load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -38,56 +30,14 @@ user_genre_preferences = defaultdict(Counter)
 # Artist preferences
 user_artist_preferences = defaultdict(Counter)
 
-# Load saved data if exists
+# Simplified data persistence for Vercel (in-memory only)
 def load_saved_data():
-    global playlists, recently_played, user_profiles, song_features, user_listening_history, user_genre_preferences, user_artist_preferences
-    try:
-        if os.path.exists('playlists.pkl'):
-            with open('playlists.pkl', 'rb') as f:
-                playlists = pickle.load(f)
-        if os.path.exists('recently_played.pkl'):
-            with open('recently_played.pkl', 'rb') as f:
-                recently_played = pickle.load(f)
-        if os.path.exists('user_profiles.pkl'):
-            with open('user_profiles.pkl', 'rb') as f:
-                user_profiles = pickle.load(f)
-        if os.path.exists('song_features.pkl'):
-            with open('song_features.pkl', 'rb') as f:
-                song_features = pickle.load(f)
-        if os.path.exists('user_listening_history.pkl'):
-            with open('user_listening_history.pkl', 'rb') as f:
-                user_listening_history = pickle.load(f)
-        if os.path.exists('user_genre_preferences.pkl'):
-            with open('user_genre_preferences.pkl', 'rb') as f:
-                user_genre_preferences = pickle.load(f)
-        if os.path.exists('user_artist_preferences.pkl'):
-            with open('user_artist_preferences.pkl', 'rb') as f:
-                user_artist_preferences = pickle.load(f)
-    except Exception as e:
-        print(f"Error loading saved data: {e}")
-    
-    # Load search history
-    load_search_history()
+    # Data will be stored in memory only for serverless deployment
+    pass
 
-# Save data to files
 def save_data():
-    try:
-        with open('playlists.pkl', 'wb') as f:
-            pickle.dump(playlists, f)
-        with open('recently_played.pkl', 'wb') as f:
-            pickle.dump(recently_played, f)
-        with open('user_profiles.pkl', 'wb') as f:
-            pickle.dump(user_profiles, f)
-        with open('song_features.pkl', 'wb') as f:
-            pickle.dump(song_features, f)
-        with open('user_listening_history.pkl', 'wb') as f:
-            pickle.dump(dict(user_listening_history), f)
-        with open('user_genre_preferences.pkl', 'wb') as f:
-            pickle.dump(dict(user_genre_preferences), f)
-        with open('user_artist_preferences.pkl', 'wb') as f:
-            pickle.dump(dict(user_artist_preferences), f)
-    except Exception as e:
-        print(f"Error saving data: {e}")
+    # Data persistence disabled for serverless deployment
+    pass
 
 # Helper functions for recommendation system
 def get_user_id():
@@ -304,29 +254,17 @@ def get_quick_picks(auth_file=None):
 search_history = []
 
 def save_search_history(query):
-    """Save search query to history"""
+    """Save search query to history (in-memory only for serverless)"""
     global search_history
     if query and query not in search_history:
         search_history.insert(0, query)
         # Keep only last 50 searches
         search_history = search_history[:50]
-        # Save to file
-        try:
-            with open('search_history.pkl', 'wb') as f:
-                pickle.dump(search_history, f)
-        except Exception as e:
-            print(f"Error saving search history: {e}")
 
 def load_search_history():
-    """Load search history from file"""
+    """Load search history (simplified for serverless)"""
     global search_history
-    try:
-        if os.path.exists('search_history.pkl'):
-            with open('search_history.pkl', 'rb') as f:
-                search_history = pickle.load(f)
-    except Exception as e:
-        print(f"Error loading search history: {e}")
-        search_history = []
+    search_history = []
 
 # Load saved data on startup
 load_saved_data()
