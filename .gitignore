@@ -233,3 +233,4 @@ yarn-error.log*
 kotlin-streaming-backend/build/
 kotlin-streaming-backend/.gradle/
 kotlin-streaming-backend/local.properties
+.vercel
