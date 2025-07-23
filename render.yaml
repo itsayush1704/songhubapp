@@ -7,9 +7,11 @@ services:
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.12
+        value: 3.11.7
       - key: SECRET_KEY
         generateValue: true
+      - key: FLASK_ENV
+        value: production
     healthCheckPath: /health
     disk:
       name: songhub-data
