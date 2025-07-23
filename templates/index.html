@@ -2946,14 +2946,30 @@
                     console.error('Failed to update server recently played:', error);
                 }
                 
-                // Get stream URL from backend
-                let response, streamData;
+                // Try proxy streaming first, then fallback to direct streaming
+                let streamUrl;
+                let useProxy = true;
+                
                 try {
-                    response = await fetch(`/get_stream_url/${videoId}?audio_only=true`);
+                    // First, try to get stream URL to check if proxy is viable
+                    const response = await fetch(`/get_stream_url/${videoId}?audio_only=true`);
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    streamData = await response.json();
+                    const streamData = await response.json();
+                    
+                    if (streamData.status === 'success') {
+                        // Check if it's a direct YouTube URL (proxy won't work)
+                        if (streamData.stream_url.includes('youtube.com/watch')) {
+                            useProxy = false;
+                            streamUrl = streamData.stream_url;
+                        } else {
+                            // Use proxy endpoint for actual streaming URLs
+                            streamUrl = `/proxy_stream/${videoId}`;
+                        }
+                    } else {
+                        throw new Error('Failed to get stream URL');
+                    }
                 } catch (fetchError) {
                     console.error('Fetch error details:', fetchError);
                     // Fallback to YouTube if fetch fails
@@ -2966,10 +2982,12 @@
                     return;
                 }
                 
-                if (streamData.status === 'success') {
-                    // Create new audio element
-                    currentAudio = new Audio();
-                    // Don't set crossOrigin for Google Video URLs as they don't support CORS
+                // Create new audio element
+                currentAudio = new Audio();
+                // Set crossOrigin for proxy requests, but not for direct YouTube URLs
+                if (useProxy) {
+                    currentAudio.crossOrigin = 'anonymous';
+                }
                     
                     let hasErrored = false;
                     
@@ -3022,7 +3040,7 @@
                     });
                     
                     // Set source and try to play
-                    currentAudio.src = streamData.stream_url;
+                    currentAudio.src = streamUrl;
                     setupProgressBar();
                     
                     // Add a timeout to detect if loading takes too long
@@ -3072,15 +3090,6 @@
                             window.open(youtubeUrl, '_blank');
                         }
                     }
-                } else {
-                    // Fallback to YouTube if streaming fails
-                    isBuffering = false;
-                    isPlaying = false;
-                    updatePlayPauseButton();
-                    showNotification('Streaming unavailable. Opening in YouTube...', 'info');
-                    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-                    window.open(youtubeUrl, '_blank');
-                }
             } catch (error) {
                 console.error('Failed to play song:', error);
                 isBuffering = false;

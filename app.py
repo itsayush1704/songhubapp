@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, send_file
+from flask import Flask, render_template, request, jsonify, session, send_file, Response
 from flask_cors import CORS
 from ytmusicapi import YTMusic
 import os
@@ -7,6 +7,8 @@ from datetime import datetime
 from collections import defaultdict, Counter
 import hashlib
 import time
+import requests
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -1265,6 +1267,78 @@ def get_playlist_songs(playlist_id):
             'status': 'error',
             'message': str(e)
         }), 500
+
+@app.route('/proxy_stream/<video_id>')
+def proxy_stream(video_id):
+    """Proxy endpoint to stream audio through Flask server, bypassing CORS"""
+    try:
+        # Get the stream URL using yt-dlp
+        result = get_youtube_stream_url(video_id, audio_only=True)
+        
+        if result['status'] != 'success':
+            return jsonify({'error': 'Failed to get stream URL'}), 404
+        
+        stream_url = result['stream_url']
+        
+        # Check if it's a direct YouTube URL (fallback case)
+        if 'youtube.com/watch' in stream_url:
+            return jsonify({'error': 'Direct YouTube streaming not supported via proxy'}), 400
+        
+        # Stream the audio through Flask
+        def generate():
+            try:
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'audio/*,*/*;q=0.9',
+                    'Accept-Encoding': 'identity',
+                    'Range': request.headers.get('Range', 'bytes=0-')
+                }
+                
+                # Forward range requests for seeking support
+                if 'Range' in request.headers:
+                    headers['Range'] = request.headers['Range']
+                
+                response = requests.get(stream_url, headers=headers, stream=True, timeout=30)
+                
+                if response.status_code in [200, 206]:  # 206 for partial content (range requests)
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            yield chunk
+                else:
+                    print(f"Stream request failed with status: {response.status_code}")
+                    
+            except Exception as e:
+                print(f"Error in stream generator: {e}")
+                return
+        
+        # Get content type and length from the original response
+        try:
+            head_response = requests.head(stream_url, timeout=10)
+            content_type = head_response.headers.get('Content-Type', 'audio/mpeg')
+            content_length = head_response.headers.get('Content-Length')
+        except:
+            content_type = 'audio/mpeg'
+            content_length = None
+        
+        # Create response with appropriate headers
+        response = Response(generate(), mimetype=content_type)
+        response.headers['Accept-Ranges'] = 'bytes'
+        response.headers['Cache-Control'] = 'no-cache'
+        
+        if content_length:
+            response.headers['Content-Length'] = content_length
+        
+        # Handle range requests for seeking
+        if 'Range' in request.headers:
+            response.status_code = 206
+            range_header = request.headers['Range']
+            response.headers['Content-Range'] = f"bytes {range_header.split('=')[1]}/{content_length or '*'}"
+        
+        return response
+        
+    except Exception as e:
+        print(f"Proxy stream error: {e}")
+        return jsonify({'error': 'Streaming failed'}), 500
 
 @app.route('/health')
 def health_check():
