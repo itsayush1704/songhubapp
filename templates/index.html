@@ -17,7 +17,7 @@
     <meta property="og:url" content="http://localhost:5000/">
     <meta property="og:title" content="SongHub - Free YouTube Music Streaming Platform">
     <meta property="og:description" content="Discover and stream millions of songs for free. Modern music streaming platform with YouTube integration.">
-    <meta property="og:image" content="https://img.icons8.com/ios_filled/512/40C057/youtube-music.png">
+    <meta property="og:image" content="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTAwIiBmaWxsPSIjMURCOTU0Ii8+CjxwYXRoIGQ9Ik0yNTYgMTAwQzE4Ni4zIDEwMCAxMzAgMTU2LjMgMTMwIDIyNlMxODYuMyAzNTIgMjU2IDM1MlMzODIgMjk1LjcgMzgyIDIyNlMzMjUuNyAxMDAgMjU2IDEwMFpNMzA2IDI0MEwyMjAgMjkwVjE5MEwzMDYgMjQwWiIgZmlsbD0iIzAwMCIvPgo8L3N2Zz4K">
     <meta property="og:site_name" content="SongHub">
     
     <!-- Twitter -->
@@ -25,7 +25,7 @@
     <meta property="twitter:url" content="http://localhost:5000/">
     <meta property="twitter:title" content="SongHub - Free YouTube Music Streaming Platform">
     <meta property="twitter:description" content="Discover and stream millions of songs for free. Modern music streaming platform with YouTube integration.">
-    <meta property="twitter:image" content="https://img.icons8.com/ios_filled/512/40C057/youtube-music.png">
+    <meta property="twitter:image" content="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTAwIiBmaWxsPSIjMURCOTU0Ii8+CjxwYXRoIGQ9Ik0yNTYgMTAwQzE4Ni4zIDEwMCAxMzAgMTU2LjMgMTMwIDIyNlMxODYuMyAzNTIgMjU2IDM1MlMzODIgMjk1LjcgMzgyIDIyNlMzMjUuNyAxMDAgMjU2IDEwMFpNMzA2IDI0MEwyMjAgMjkwVjE5MEwzMDYgMjQwWiIgZmlsbD0iIzAwMCIvPgo8L3N2Zz4K">
     
     <!-- Additional Meta Tags -->
     <meta name="theme-color" content="#1DB954">
@@ -33,7 +33,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SongHub">
     
-    <link rel="icon" href="https://img.icons8.com/ios_filled/512/40C057/youtube-music.png" type="image/png">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTAwIiBmaWxsPSIjMURCOTU0Ii8+CjxwYXRoIGQ9Ik0yNTYgMTAwQzE4Ni4zIDEwMCAxMzAgMTU2LjMgMTMwIDIyNlMxODYuMyAzNTIgMjU2IDM1MlMzODIgMjk1LjcgMzgyIDIyNlMzMjUuNyAxMDAgMjU2IDEwMFpNMzA2IDI0MEwyMjAgMjkwVjE5MEwzMDYgMjQwWiIgZmlsbD0iIzAwMCIvPgo8L3N2Zz4K" type="image/svg+xml">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -65,12 +65,19 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: url('https://source.unsplash.com/random/1920x1080?dark,music,abstract') no-repeat center center;
-            background-size: cover;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #e94560 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             filter: blur(12px) brightness(0.6);
             z-index: -2;
             transition: opacity 0.8s ease-in-out;
             opacity: var(--bg-opacity, 1);
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         body::after {
@@ -1846,7 +1853,6 @@
                 </div>
             </div>
 
-
         </div>
 
 
@@ -2858,12 +2864,26 @@
                 updatePlayPauseButton();
 
                 // Add to recently played using cookie storage
-                addToRecentlyPlayed({
+                const songData = {
                     videoId: videoId,
                     title: title,
                     artists: [{ name: artist }],
                     thumbnails: [{ url: thumbnail }]
-                });
+                };
+                addToRecentlyPlayed(songData);
+                
+                // Also send to server for persistence
+                try {
+                    await fetch('/play_event', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(songData)
+                    });
+                } catch (error) {
+                    console.error('Failed to update server recently played:', error);
+                }
                 
                 // Get stream URL from backend
                 const response = await fetch(`/get_stream_url/${videoId}?audio_only=true`);
@@ -4225,11 +4245,21 @@
                 }
                 
                 if (recentData.status === 'success') {
-                    freshData.recentlyPlayed = recentData.recently_played;
-                    displayRecentlyPlayed(recentData.recently_played);
-                    // Also save to cookies for backward compatibility
-                    if (recentData.recently_played.length > 0) {
-                        saveRecentlyPlayedToCookie(recentData.recently_played);
+                    // Check if we have more recent cookie data
+                    const cookieData = loadRecentlyPlayedFromCookie();
+                    if (cookieData.length > 0 && (recentData.recently_played.length === 0 || 
+                        (cookieData[0].timestamp && recentData.recently_played[0]?.timestamp && 
+                         cookieData[0].timestamp > recentData.recently_played[0].timestamp))) {
+                        // Cookie data is more recent, use it
+                        freshData.recentlyPlayed = cookieData;
+                        displayRecentlyPlayed(cookieData);
+                    } else {
+                        // Server data is more recent or we have no cookie data
+                        freshData.recentlyPlayed = recentData.recently_played;
+                        displayRecentlyPlayed(recentData.recently_played);
+                        if (recentData.recently_played.length > 0) {
+                            saveRecentlyPlayedToCookie(recentData.recently_played);
+                        }
                     }
                 }
                 
@@ -4336,10 +4366,16 @@
                     checkAllLoaded();
                     
                     if (recentData.status === 'success') {
-                        displayRecentlyPlayed(recentData.recently_played);
-                        cacheData.recentlyPlayed = recentData.recently_played;
-                        if (recentData.recently_played.length > 0) {
-                            saveRecentlyPlayedToCookie(recentData.recently_played);
+                        // Only use server data if we don't have cookie data or server has more recent data
+                        if (cookieRecentlyPlayed.length === 0 || recentData.recently_played.length > cookieRecentlyPlayed.length) {
+                            displayRecentlyPlayed(recentData.recently_played);
+                            cacheData.recentlyPlayed = recentData.recently_played;
+                            if (recentData.recently_played.length > 0) {
+                                saveRecentlyPlayedToCookie(recentData.recently_played);
+                            }
+                        } else {
+                            // Use cookie data as it's more up-to-date
+                            cacheData.recentlyPlayed = cookieRecentlyPlayed;
                         }
                     }
                     checkAllLoaded();
