@@ -1,7 +1,8 @@
-Flask
-ytmusicapi
-python-dotenv
-yt-dlp
-requests
-numpy
-scikit-learn
+Flask==2.3.3
+ytmusicapi==1.3.2
+python-dotenv==1.0.0
+yt-dlp==2023.10.13
+requests==2.31.0
+numpy==1.24.3
+scikit-learn==1.3.0
+Flask-CORS==4.0.0
